@@ -19,8 +19,7 @@ const ChatList = () => {
   const { authUser } = useAuthContext();
   const { onlineUsers } = useSocketContext(); // Get online users list from socket context
   const token = authUser?.token;
-  console.log(authUser?.user.id, "auth user id")
-  console.log(onlineUsers, "online user")
+  
 
   const fetchConversations = useCallback(async () => {
     if (!token) return;
@@ -41,7 +40,7 @@ const ChatList = () => {
   if (loading) {
     return <LoadingState/>
   }
-
+     
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1">
@@ -50,8 +49,8 @@ const ChatList = () => {
             No conversations found
           </Text>
         ) : (
-          conversations.map((chat) => {
-            const userId = chat.participants?.[0]?._id;
+          conversations?.map((chat) => {
+            const userId = chat?.participants?.[0]?._id;
             const isOnline = onlineUsers.includes(userId); 
 
             return (
@@ -82,7 +81,7 @@ const ChatList = () => {
                 <View className="flex-1">
                   <View className="flex-row justify-between items-center mb-1">
                     <Text className="text-base font-semibold">
-                      {chat.participants?.[0]?.username || "Unknown"}
+                      {chat?.participants?.[0]?.username || "Unknown"}
                     </Text>
                     <Text className="text-sm text-gray-500">
                       {new Date(chat.updatedAt).toLocaleTimeString()}

@@ -40,7 +40,7 @@ export const SocketContextProvider: React.FC<SocketContextProviderProps> = ({
 
   useEffect(() => {
     if (authUser) {
-      const socketInstance = io("https://4a76-103-186-78-241.ngrok-free.app", {
+      const socketInstance = io("https://c6d1-103-186-78-241.ngrok-free.app", {
         query: {
           userId: authUser?.user.id,
         },
@@ -52,13 +52,11 @@ export const SocketContextProvider: React.FC<SocketContextProviderProps> = ({
         setOnlineUsers(users);
       });
 
-      // Cleanup on unmount or when authUser changes
       return () => {
         socketInstance.close();
         setSocket(null);
       };
     } else {
-      // Clean up socket if user is not authenticated
       if (socket) {
         socket.close();
         setSocket(null);

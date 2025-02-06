@@ -16,7 +16,14 @@ const userSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-    }
+    },
+    statuses: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Status",
+            default: [],
+        },
+    ],
 },
     {
         timestamps: true,

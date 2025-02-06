@@ -29,9 +29,11 @@ const TabHeader: React.FC = () => {
       <View className="flex-row justify-between items-center p-3 ">
         <Text className="text-xl font-semibold">{getTabName()}</Text>
         <View className="w-12 h-12 rounded-full bg-orange-500 items-center justify-center">
-          <Text className="text-white font-medium">
+         <TouchableOpacity onPress={logout}>
+         <Text className="text-white font-medium">
             {authUser?.user.username?.[0] || "?"}
           </Text>
+         </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

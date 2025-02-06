@@ -85,7 +85,7 @@ export const getAllConversations = async (req, res) => {
         }).populate("participants", "-password");
 
         if (conversations.length === 0) {
-            return res.status(404).json({ message: "No conversations found" });
+            return res.status(200).json([]);
         }
 
         const filteredConversations = conversations.map(conversation => {
@@ -110,9 +110,9 @@ export const createConversation = async (req, res) => {
         const senderId = req.user._id;
 
         if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                error: "Invalid receiver ID format" 
+                error: "Invalid receiver ID format"
             });
         }
 
@@ -159,10 +159,13 @@ export const createConversation = async (req, res) => {
 
     } catch (error) {
         console.error("Error in createConversation controller:", error.message);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: "Internal server error" 
+            error: "Internal server error"
         });
     }
 };
+
+
+
 

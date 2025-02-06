@@ -2,6 +2,7 @@ import express from "express"
 import cors from "cors"
 import { authRouter } from "./src/routes/auth.js"
 import { messageRouter } from "./src/routes/message.js"
+import { statusRouter } from "./src/routes/status.js"
 
 
 export const app = express()
@@ -11,4 +12,5 @@ app.use(cors())
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/messages", messageRouter)
+app.use("/api/v1/status", statusRouter)
 
