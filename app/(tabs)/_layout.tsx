@@ -19,6 +19,7 @@ const TabsLayout = () => {
             height: 90,
             shadowColor: "#000",
           },
+          tabBarShowLabel: false
         }}
       >
         <Tabs.Screen

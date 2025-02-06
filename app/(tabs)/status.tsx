@@ -1,70 +1,150 @@
-import { useEffect, useState } from "react"
-import { View, Text, Image, TouchableOpacity, FlatList } from "react-native"
-import { Link, useRouter } from "expo-router"
-import { CameraIcon, PlusCircleIcon } from "lucide-react-native"
-import { useGetLoggedInUserStatuses } from "@/hooks/getStatus"
-import { useAuthContext } from "@/context/authContext"
-
-interface Status {
-  _id: string
-  user: string
-  mediaUrl: string
-  mediaType: "image" | "video"
-  expiresAt: string
-  createdAt: string
-}
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
+import { Link, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { CameraIcon, PlusCircleIcon, UploadIcon } from "lucide-react-native";
+import { useGetLoggedInUserStatuses } from "@/hooks/getStatus";
+import { useAuthContext } from "@/context/authContext";
+import { useUploadStatus } from "@/hooks/uploadStatus";
+import { Status } from "@/types/status";
+import { useGetStatusFeed } from "@/hooks/getStatusFeed";
 
 const StatusScreen = () => {
-  const [userStatuses, setUserStatuses] = useState<Status[]>([])
-  const [contactStatuses, setContactStatuses] = useState<Status[]>([])
-  const { getStatus } = useGetLoggedInUserStatuses()
-  const { authUser } = useAuthContext()
-  const router = useRouter()
-
-  useEffect(() => {
-    fetchStatuses()
-  }, [])
+  const [userStatuses, setUserStatuses] = useState<Status[]>([]);
+  const [contactStatuses, setContactStatuses] = useState<Status[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<{
+    uri: string;
+    type: string;
+  } | null>(null);
+  const { getStatus, loading } = useGetLoggedInUserStatuses();
+  const { authUser } = useAuthContext();
+  const router = useRouter();
+  const { uploadStatus, loading: uploadProgress } = useUploadStatus();
+  const { getStatusFeed, loading: feedLoading } = useGetStatusFeed();
 
   const fetchStatuses = async () => {
     try {
-      const data = await getStatus(authUser?.token)
-      const currentUserStatuses = data.filter((status: Status) => status.user === authUser?.user.id)
-      const otherStatuses = data.filter((status: Status) => status.user !== authUser?.user.id)
-      setUserStatuses(currentUserStatuses)
-      setContactStatuses(otherStatuses)
-    } catch (error) {
-      console.error("Error fetching statuses:", error)
-    }
-  }
+      const data = await getStatus(authUser?.token);
+      const currentUserStatuses = data.filter(
+        (status: Status) => status.user === authUser?.user.id
+      );
 
-  const renderStatusItem = ({ item }: { item: Status }) => (
+      setUserStatuses(currentUserStatuses);
+    } catch (error) {
+      console.error("Error fetching statuses:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatuses();
+  }, []);
+
+  const fetchContactStatuses = async () => {
+    try {
+      const data = await getStatusFeed(authUser?.token);
+      const groupedStatuses = data.reduce((acc: any, status: any) => {
+        const userId = status.user._id;
+        if (!acc[userId]) {
+          acc[userId] = {
+            user: status.user,
+            statuses: [],
+          };
+        }
+        acc[userId].statuses.push(status);
+        return acc;
+      }, {} as Record<string, { user: Status["user"]; statuses: Status[] }>);
+      const formattedStatuses: any = Object.values(groupedStatuses);
+
+      setContactStatuses(formattedStatuses);
+    } catch (error) {
+      console.error("Error fetching contact statuses:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchContactStatuses();
+  }, []);
+
+  const pickMedia = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      alert("Permission to access gallery is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const media = result.assets[0];
+      setSelectedMedia({ uri: media.uri, type: media.type || "image" });
+    }
+  };
+  const uploadMedia = () => {
+    if (selectedMedia) {
+      const file = {
+        uri: selectedMedia.uri,
+        type: selectedMedia.type,
+        name: selectedMedia.uri.split("/").pop() || "status-media",
+      };
+
+      uploadStatus(file, authUser?.token)
+        .then(() => {
+          setSelectedMedia(null);
+          fetchStatuses();
+        })
+        .catch((error) => console.error("Error uploading media:", error));
+    }
+  };
+
+  const renderStatusItem = ({
+    item,
+  }: {
+    item: { user: Status["user"]; statuses: Status[] };
+  }) => (
     <Link
       href={{
         pathname: "/StatusViewer",
-        // Pass all statuses for this user, not just the single item
         params: {
-          statuses: JSON.stringify(
-            item.user === authUser?.user.id ? userStatuses : contactStatuses.filter((status) => status.user === item.user),
-          ),
+          statuses: JSON.stringify(item.statuses),
           initialIndex: "0",
         },
       }}
       asChild
     >
-      <TouchableOpacity className="flex-row items-center p-4">
+      <TouchableOpacity
+        className="flex-row items-center p-4"
+        key={item.user._id}
+      >
         <View className="relative">
-          <Image source={{ uri: item.mediaUrl }} className="w-14 h-14 rounded-full" />
-          <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+          <Image
+            source={{ uri: item.statuses[0]?.mediaUrl }}
+            className="w-14 h-14 rounded-full"
+          />
         </View>
         <View className="ml-4">
-          <Text className="font-medium">{item.user === authUser?.user.id ? "My Status" : "Contact Name"}</Text>
+          <Text className="font-medium">{item?.user?.username}</Text>
           <Text className="text-gray-500 text-sm">
-            {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {new Date(item.statuses[0]?.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </View>
       </TouchableOpacity>
     </Link>
-  )
+  );
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -82,36 +162,54 @@ const StatusScreen = () => {
           <View className="relative">
             <View className="w-16 h-16 rounded-full border-4 border-green-500 flex items-center justify-center">
               <Image
-                source={{ uri: userStatuses[0]?.mediaUrl || "https://via.placeholder.com/100" }}
+                source={{
+                  uri:
+                    userStatuses[0]?.mediaUrl ||
+                    "https://via.placeholder.com/100",
+                }}
                 className="w-14 h-14 rounded-full"
               />
             </View>
             {userStatuses.length === 0 && (
-              <PlusCircleIcon className="absolute bottom-0 right-0 bg-white rounded-full" size={20} color="#007AFF" />
+              <PlusCircleIcon
+                className="absolute bottom-0 right-0 bg-white rounded-full"
+                size={20}
+                color="#007AFF"
+              />
             )}
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-medium">My Status</Text>
             <Text className="text-sm text-gray-500">
-              {userStatuses.length > 0 ? "Tap to view your status" : "Add to my status"}
+              {userStatuses.length > 0
+                ? "Tap to view your status"
+                : "Add to my status"}
             </Text>
           </View>
-          <TouchableOpacity
-            className="p-2"
-            onPress={() => {
-              /* Handle camera click */
-            }}
-          >
+          <TouchableOpacity className="p-2" onPress={pickMedia}>
             <CameraIcon size={24} color="#007AFF" />
           </TouchableOpacity>
         </TouchableOpacity>
       </Link>
 
+      {selectedMedia && (
+        <View className="p-4 bg-white flex-row items-center justify-between">
+          <Text className="text-gray-600">Selected: {selectedMedia.type}</Text>
+          <TouchableOpacity className="p-2" onPress={uploadMedia}>
+            <UploadIcon size={24} color="orange" />
+          </TouchableOpacity>
+        </View>
+      )}
+      {uploadProgress && <ActivityIndicator size="small" color="orange" />}
+
       <Text className="p-4 text-gray-500 font-medium">Recent updates</Text>
-      <FlatList data={contactStatuses} renderItem={renderStatusItem} keyExtractor={(item) => item._id} />
+      <FlatList
+        data={contactStatuses ?? []}
+        renderItem={renderStatusItem}
+        keyExtractor={(item) => item._id}
+      />
     </View>
-  )
-}
+  );
+};
 
-export default StatusScreen
-
+export default StatusScreen;

@@ -11,6 +11,7 @@ export const uploadStatus = async (req, res) => {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
+
         console.log("Uploaded file:", req.file);
         const file = req.file;
         const filePath = `statuses/${req.user._id}/${Date.now()}-${file.originalname}`;
@@ -29,10 +30,8 @@ export const uploadStatus = async (req, res) => {
             return res.status(500).json({ message: "Supabase upload failed", error });
         }
 
-        // Manually construct the public URL
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/status-media/${filePath}`;
 
-        // Save status to MongoDB
         const newStatus = new Status({
             user: req.user._id,
             mediaUrl: publicUrl,
@@ -40,6 +39,8 @@ export const uploadStatus = async (req, res) => {
         });
 
         await newStatus.save();
+        const userStatus = await User.findByIdAndUpdate(req.user._id, { $push: { statuses: newStatus._id } }, { new: true });
+
 
         res.status(201).json({ message: "Status uploaded successfully", status: newStatus });
     } catch (error) {

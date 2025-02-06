@@ -14,67 +14,68 @@ interface Status {
 }
 
 const { width, height } = Dimensions.get("window")
-const STATUS_DURATION = 5000 // 5 seconds for each status
+const STATUS_DURATION = 5000 // 5 seconds per image status
+const UPDATE_INTERVAL = 100 // Update progress every 100ms
 
 const StatusViewer = () => {
   const { statuses: statusesParam, initialIndex: initialIndexParam } = useLocalSearchParams()
-  const statuses: Status[] = JSON.parse(statusesParam as string)
-  const [currentIndex, setCurrentIndex] = useState(Number.parseInt(initialIndexParam as string, 10) || 0)
+  const [statuses, setStatuses] = useState<Status[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const videoRef = useRef<Video>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const progressInterval = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    try {
+      const parsedStatuses = JSON.parse(statusesParam as string)
+      const initialIndex = Number(initialIndexParam) || 0
+      setStatuses(parsedStatuses)
+      setCurrentIndex(Math.min(initialIndex, parsedStatuses.length - 1))
+    } catch (e) {
+      console.error("Error parsing statuses:", e)
+      setError("Failed to load statuses")
+    }
+  }, [statusesParam, initialIndexParam])
 
   const currentStatus = statuses[currentIndex]
 
   useEffect(() => {
     setIsLoading(true)
     setProgress(0)
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-    }
-
-    if (currentStatus.mediaType === "image") {
-      startImageTimer()
-    } else if (currentStatus.mediaType === "video") {
-      if (videoRef.current) {
-        videoRef.current.stopAsync().then(() => {
-          videoRef.current?.playAsync()
-        })
-      }
-    }
+    if (progressInterval.current) clearInterval(progressInterval.current)
 
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
+      if (progressInterval.current) clearInterval(progressInterval.current)
     }
-  }, [currentStatus.mediaType])
+  }, [currentIndex])
 
-  const startImageTimer = () => {
-    setIsLoading(false)
-    timerRef.current = setInterval(() => {
-      setProgress((prevProgress) => {
-        const newProgress = prevProgress + 100 / (STATUS_DURATION / 100)
-        if (newProgress >= 100) {
-          handleStatusEnd()
-          return 0
-        }
-        return newProgress
-      })
-    }, 100)
+  const startImageProgress = () => {
+    let elapsedTime = 0
+    progressInterval.current = setInterval(() => {
+      elapsedTime += UPDATE_INTERVAL
+      setProgress((elapsedTime / STATUS_DURATION) * 100)
+      if (elapsedTime >= STATUS_DURATION) {
+        clearInterval(progressInterval.current!)
+        handleStatusEnd()
+      }
+    }, UPDATE_INTERVAL)
   }
 
-  const handleVideoLoad = () => {
+  const handleMediaReady = () => {
     setIsLoading(false)
+    if (currentStatus?.mediaType === "image") {
+      startImageProgress()
+    }
   }
 
   const handleVideoPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
-      const progress = (status.positionMillis / status.durationMillis!) * 100
-      setProgress(progress)
-
+      if (status.durationMillis) {
+        setProgress((status.positionMillis / status.durationMillis) * 100)
+      }
       if (status.didJustFinish) {
         handleStatusEnd()
       }
@@ -83,39 +84,58 @@ const StatusViewer = () => {
 
   const handleStatusEnd = () => {
     if (currentIndex < statuses.length - 1) {
-      setCurrentIndex(currentIndex + 1)
+      setCurrentIndex(prev => prev + 1)
     } else {
-      router.back() // Automatically close the viewer when the last status ends
+      router.back()
     }
   }
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
+      setCurrentIndex(prev => prev - 1)
     } else {
       router.back()
     }
   }
 
   const handleNext = () => {
-    handleStatusEnd() // Use the same logic as when a status naturally ends
+    if (currentIndex < statuses.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+    } else {
+      router.back()
+    }
   }
 
-  if (!currentStatus) {
+  const handleError = (message: string) => {
+    console.error(message)
+    setError(message)
+    setIsLoading(false)
+  }
+
+  if (error) {
     return (
       <View className="flex-1 bg-black justify-center items-center">
-        <Text className="text-white">No status to display</Text>
+        <Text className="text-white">{error}</Text>
+      </View>
+    )
+  }
+
+  if (!statuses.length || !currentStatus) {
+    return (
+      <View className="flex-1 bg-black justify-center items-center">
+        <ActivityIndicator size="large" color="#ffffff" />
       </View>
     )
   }
 
   return (
     <View className="flex-1 bg-black">
+      {/* Progress Bars */}
       <View className="flex-row justify-between p-2 absolute top-0 left-0 right-0 z-10">
         {statuses.map((_, index) => (
           <View key={index} className="flex-1 h-1 bg-gray-500 mx-1">
             <View
-              className="h-full bg-white"
+              className="h-full bg-white transition-all duration-100"
               style={{ width: `${index < currentIndex ? 100 : index === currentIndex ? progress : 0}%` }}
             />
           </View>
@@ -123,7 +143,7 @@ const StatusViewer = () => {
       </View>
 
       <View className="flex-row justify-between items-center absolute top-10 left-4 right-4 z-10">
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handlePrevious}>
           <ChevronLeftIcon size={30} color="white" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleNext}>
@@ -132,20 +152,26 @@ const StatusViewer = () => {
       </View>
 
       <View className="flex-1 justify-center items-center">
-        {isLoading && <ActivityIndicator size="large" color="#ffffff" />}
-        {currentStatus.mediaType === "image" ? (
+        {isLoading && <ActivityIndicator size="large" color="#ffffff" className="absolute top-20" />}
+        
+        {currentStatus.mediaType === "image" && (
           <Image
             source={{ uri: currentStatus.mediaUrl }}
-            style={{ width, height, resizeMode: "contain" }}
-            onLoad={() => setIsLoading(false)}
+            style={{ width, height }}
+            resizeMode="contain"
+            onLoad={handleMediaReady}
+            onError={() => handleError("Failed to load image")}
           />
-        ) : (
+        )}
+
+        {currentStatus.mediaType === "video" && (
           <Video
             ref={videoRef}
             source={{ uri: currentStatus.mediaUrl }}
             style={{ width, height }}
             resizeMode={ResizeMode.CONTAIN}
-            onLoad={handleVideoLoad}
+            onReadyForDisplay={handleMediaReady}
+            onError={() => handleError("Failed to load video")}
             onPlaybackStatusUpdate={handleVideoPlaybackStatusUpdate}
             isLooping={false}
             shouldPlay
@@ -160,4 +186,3 @@ const StatusViewer = () => {
 }
 
 export default StatusViewer
-
