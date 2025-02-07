@@ -13,12 +13,12 @@ import { CameraIcon, PlusCircleIcon, UploadIcon } from "lucide-react-native";
 import { useGetLoggedInUserStatuses } from "@/hooks/getStatus";
 import { useAuthContext } from "@/context/authContext";
 import { useUploadStatus } from "@/hooks/uploadStatus";
-import { Status } from "@/types/status";
+import { GroupedStatuses, Status } from "@/types/status";
 import { useGetStatusFeed } from "@/hooks/getStatusFeed";
 
 const StatusScreen = () => {
   const [userStatuses, setUserStatuses] = useState<Status[]>([]);
-  const [contactStatuses, setContactStatuses] = useState<Status[]>([]);
+  const [contactStatuses, setContactStatuses] = useState<GroupedStatuses[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<{
     uri: string;
     type: string;
@@ -73,24 +73,27 @@ const StatusScreen = () => {
   }, []);
 
   const pickMedia = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
       alert("Permission to access gallery is required!");
       return;
     }
-
+  
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
+      mediaTypes: ImagePicker.MediaTypeOptions.All, // Allow both images & videos
+      allowsEditing: false, // Disable editing (fixes some Android issues)
       quality: 1,
+      selectionLimit: 1, // Ensures single selection
     });
-
-    if (!result.canceled && result.assets.length > 0) {
+  
+    console.log("Media selection result:", result); // Debugging log
+  
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       const media = result.assets[0];
       setSelectedMedia({ uri: media.uri, type: media.type || "image" });
     }
   };
+  
   const uploadMedia = () => {
     if (selectedMedia) {
       const file = {
@@ -111,9 +114,12 @@ const StatusScreen = () => {
   const renderStatusItem = ({
     item,
   }: {
-    item: { user: Status["user"]; statuses: Status[] };
+    item: {
+      _id: string; user: Status["user"]; statuses: Status[]
+};
   }) => (
     <Link
+    key={item._id}
       href={{
         pathname: "/StatusViewer",
         params: {
@@ -206,7 +212,7 @@ const StatusScreen = () => {
       <FlatList
         data={contactStatuses ?? []}
         renderItem={renderStatusItem}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item?._id ?? Math.random().toString()}
       />
     </View>
   );

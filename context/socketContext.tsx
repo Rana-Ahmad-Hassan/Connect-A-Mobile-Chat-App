@@ -40,7 +40,7 @@ export const SocketContextProvider: React.FC<SocketContextProviderProps> = ({
 
   useEffect(() => {
     if (authUser) {
-      const socketInstance = io("https://bde5-103-186-78-241.ngrok-free.app", {
+      const socketInstance = io("https://f168-103-186-78-241.ngrok-free.app", {
         query: {
           userId: authUser?.user.id,
         },
