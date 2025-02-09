@@ -80,13 +80,12 @@ const StatusScreen = () => {
     }
   
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All, // Allow both images & videos
-      allowsEditing: false, // Disable editing (fixes some Android issues)
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false,
       quality: 1,
-      selectionLimit: 1, // Ensures single selection
+      selectionLimit: 1,
     });
   
-    console.log("Media selection result:", result); // Debugging log
   
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const media = result.assets[0];

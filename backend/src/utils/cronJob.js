@@ -7,7 +7,6 @@ const SUPABASE_URL = "https://fvjjuajypppiwhrmodxj.supabase.co"
 
 const deleteExpiredMedia = async () => {
     try {
-        // Find all expired statuses in MongoDB
         const expiredStatuses = await Status.find({ expiresAt: { $lt: new Date() } });
 
         if (expiredStatuses.length === 0) {

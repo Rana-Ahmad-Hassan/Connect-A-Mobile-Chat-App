@@ -7,7 +7,7 @@ import {
   ImageBackground,
   Alert,
 } from "react-native";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons"; // Using Expo Icons
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useLogin } from "@/hooks/login";
 

@@ -27,7 +27,7 @@ export const useSignUp = () => {
       setError(error.response?.data?.message || "Failed to register");
       throw new Error(error.response?.data?.message || "Failed to register");
     } finally {
-      setLoading(false); // Set loading to false after the request completes
+      setLoading(false);
     }
   };
 

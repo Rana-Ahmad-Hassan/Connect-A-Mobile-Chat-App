@@ -16,7 +16,6 @@ export const uploadStatus = async (req, res) => {
         const file = req.file;
         const filePath = `statuses/${req.user._id}/${Date.now()}-${file.originalname}`;
 
-        // Upload file to Supabase
         const { data, error } = await supabase.storage
             .from("status-media")
             .upload(filePath, file.buffer, {
@@ -52,10 +51,8 @@ export const uploadStatus = async (req, res) => {
 
 export const feedStatus = async (req, res) => {
     try {
-        // Find users the logged-in user has a conversation with
         const conversations = await Conversation.find({ participants: req.user._id }).populate("participants");
 
-        // Extract unique user IDs from conversations (excluding the logged-in user)
         const userIds = new Set();
         conversations.forEach(conversation => {
             conversation.participants.forEach(user => {
@@ -65,7 +62,6 @@ export const feedStatus = async (req, res) => {
             });
         });
 
-        // Fetch statuses of these users
         const statuses = await Status.find({ user: { $in: [...userIds] } }).populate("user", "username");
 
         res.status(200).json(statuses);

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { api } from "@/api/api";
-import { useAuthContext } from "@/context/authContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 
@@ -26,7 +25,7 @@ export const useValidateUser = () => {
             setError(error.response?.data?.message || "Failed to validate");
             throw new Error(error.response?.data?.message || "Failed to register");
         } finally {
-            setLoading(false); // Set loading to false after the request completes
+            setLoading(false);
         }
     };
 

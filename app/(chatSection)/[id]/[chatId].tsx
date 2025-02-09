@@ -14,14 +14,9 @@ import { useAuthContext } from "@/context/authContext";
 import { useGetMessages } from "@/hooks/getMessages";
 import { useSocketContext } from "@/context/socketContext";
 import LoadingState from "@/components/loading";
+import { Message } from "@/types/messsage";
 
-interface Message {
-  _id: string;
-  senderId: string;
-  receiverId: string;
-  message: string;
-  createdAt: string;
-}
+
 
 const ChatSection = () => {
   const router = useRouter();
@@ -142,7 +137,6 @@ const ChatSection = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200 bg-gray-50">
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeftIcon className="text-gray-600" size={24} color="black" />
@@ -153,7 +147,6 @@ const ChatSection = () => {
         </View>
       </View>
 
-      {/* Messages List */}
       <ScrollView
         ref={scrollViewRef}
         className="flex-1 p-4"

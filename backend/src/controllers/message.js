@@ -116,7 +116,6 @@ export const createConversation = async (req, res) => {
             });
         }
 
-        // Prevent self-conversation
         if (senderId.equals(receiverId)) {
             return res.status(400).json({
                 success: false,
@@ -141,13 +140,11 @@ export const createConversation = async (req, res) => {
             });
         }
 
-        // Create new conversation
         const newConversation = await Conversation.create({
             participants,
             messages: [],
         });
 
-        // Populate the participants for response
         const populatedConversation = await Conversation.findById(newConversation._id)
             .populate('participants', '-password');
 

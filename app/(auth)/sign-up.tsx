@@ -7,7 +7,7 @@ import {
   ImageBackground,
   Alert,
 } from "react-native";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons"; // Using Expo Icons
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSignUp } from "@/hooks/register";
 
@@ -81,7 +81,6 @@ const SignUpScreen = () => {
           <Text className="text-white text-center font-semibold">Sign Up</Text>
         </TouchableOpacity>
 
-        {/* Login Link */}
         <Text className="text-center text-gray-500 mt-4">
           Do you have an account?{" "}
           <TouchableOpacity onPress={() => router.push("/sign-in")}>

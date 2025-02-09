@@ -10,18 +10,18 @@ const statusSchema = new Schema(
             required: true,
         },
         mediaUrl: {
-            type: String, // Store the URL of the photo or video
+            type: String,
             required: true,
         },
         mediaType: {
             type: String,
-            enum: ["image", "video"], // Ensure only images or videos are uploaded
+            enum: ["image", "video"],
             required: true,
         },
         expiresAt: {
             type: Date,
-            default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-            index: { expires: "24h" }, // Auto-delete after 24 hours
+            default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), 
+            index: { expires: "24h" },
         },
     },
     { timestamps: true }

@@ -14,8 +14,8 @@ interface Status {
 }
 
 const { width, height } = Dimensions.get("window")
-const STATUS_DURATION = 5000 // 5 seconds per image status
-const UPDATE_INTERVAL = 100 // Update progress every 100ms
+const STATUS_DURATION = 5000
+const UPDATE_INTERVAL = 100
 
 const StatusViewer = () => {
   const { statuses: statusesParam, initialIndex: initialIndexParam } = useLocalSearchParams()

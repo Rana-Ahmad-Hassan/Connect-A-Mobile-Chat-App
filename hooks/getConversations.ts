@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { api } from "@/api/api";
-import { useAuthContext } from "@/context/authContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 

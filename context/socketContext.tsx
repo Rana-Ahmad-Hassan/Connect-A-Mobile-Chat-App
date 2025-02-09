@@ -8,15 +8,13 @@ import {
 import io, { Socket } from "socket.io-client";
 import { useAuthContext } from "./authContext";
 
-// Define types for the SocketContext
 interface SocketContextType {
   socket: Socket | null;
-  onlineUsers: string[]; // Assuming the online users are represented by their user IDs
+  onlineUsers: string[];
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
-// Custom hook to use the SocketContext
 export const useSocketContext = (): SocketContextType => {
   const context = useContext(SocketContext);
   if (!context) {
@@ -40,10 +38,10 @@ export const SocketContextProvider: React.FC<SocketContextProviderProps> = ({
 
   useEffect(() => {
     if (authUser) {
-      const socketInstance = io("https://f168-103-186-78-241.ngrok-free.app", {
+      const socketInstance = io("https://5c3d-103-186-78-241.ngrok-free.app", {
         query: {
           userId: authUser?.user.id,
-        },
+        }
       });
 
       setSocket(socketInstance);

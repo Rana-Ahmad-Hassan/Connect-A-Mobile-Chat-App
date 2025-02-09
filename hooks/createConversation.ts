@@ -16,12 +16,12 @@ export const useCreateConversation = () => {
 
         try {
             const response = await api.post(
-                `/api/v1/messages/create/${id}`, // Ensure the endpoint is correct
-                {}, // Provide an empty object as the request body
+                `/api/v1/messages/create/${id}`, 
+                {},
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json", // Ensure JSON format
+                        "Content-Type": "application/json", 
                     },
                 }
             );

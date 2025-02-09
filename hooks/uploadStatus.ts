@@ -15,11 +15,9 @@ export const useUploadStatus = () => {
         setError(null);
 
         try {
-            // Create a FormData object
             const formData = new FormData();
-            formData.append("file", file); // Append the file to formData
+            formData.append("file", file);
 
-            // Make the API request
             const response = await api.post("/api/v1/status/upload", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,

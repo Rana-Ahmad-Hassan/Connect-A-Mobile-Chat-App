@@ -13,21 +13,17 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
-// Water Drop Animation
 const WaterDropAnimation = () => {
-  // Main drop animations
   const dropScale = useSharedValue(1);
   const dropOpacity = useSharedValue(1);
   const dropSkew = useSharedValue(0);
 
-  // Ripple animations
   const ripple1Scale = useSharedValue(0.5);
   const ripple1Opacity = useSharedValue(1);
   const ripple2Scale = useSharedValue(0.5);
   const ripple2Opacity = useSharedValue(1);
 
   useEffect(() => {
-    // Main drop animation
     dropScale.value = withRepeat(
       withSequence(
         withTiming(1.2, { duration: 1500, easing: Easing.sin }),
@@ -46,7 +42,6 @@ const WaterDropAnimation = () => {
       true
     );
 
-    // Ripple animations
     ripple1Scale.value = withRepeat(
       withTiming(3, { duration: 3000, easing: Easing.out(Easing.exp) }),
       -1
@@ -182,7 +177,6 @@ export default function Index() {
         </Text>
       </Animated.View>
 
-      {/* Decorative Bubbles */}
       <View className="absolute top-24 right-4 z-10 animate-bounce">
         <Ionicons name="water" size={40} color="orange" />
       </View>
