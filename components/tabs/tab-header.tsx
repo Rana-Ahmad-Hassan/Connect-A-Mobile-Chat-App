@@ -26,7 +26,6 @@ const TabHeader: React.FC = () => {
 
   return (
     <SafeAreaView className="bg-white border-b border-gray-200">
-    <Text>Test branch</Text>
       <View className="flex-row justify-between items-center p-3 ">
         <Text className="text-xl font-semibold">{getTabName()}</Text>
         <View className="w-12 h-12 rounded-full bg-orange-500 items-center justify-center">

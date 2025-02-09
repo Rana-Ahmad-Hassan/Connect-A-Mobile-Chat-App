@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { ArrowLeftIcon, ArrowUp } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -14,6 +15,7 @@ import { useAuthContext } from "@/context/authContext";
 import { useGetMessages } from "@/hooks/getMessages";
 import { useSocketContext } from "@/context/socketContext";
 import LoadingState from "@/components/loading";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 interface Message {
   _id: string;
@@ -76,6 +78,32 @@ const ChatSection = () => {
           setIsTyping(false);
         }
       });
+
+      socket.on("incomingCall", (data: any) => {
+        if(data === id){
+          Alert.alert(
+            "Incoming Call",
+            `${data} is calling you`,
+            [
+              {
+                text: "Cancel",
+                onPress: () => {},
+                style: "cancel",
+              },
+              {
+                text: "Accept",
+                onPress: () => {
+                  socket.emit("answerCall", {
+                    callId: data.callId,
+                    receiverId: id,
+                  });
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        }
+      });
     }
 
     return () => {
@@ -83,6 +111,7 @@ const ChatSection = () => {
         socket.off("newMessage");
         socket.off("userTyping");
         socket.off("userStoppedTyping");
+        socket.off("incomingCall");
       }
     };
   }, [socket, id]);
@@ -140,17 +169,29 @@ const ChatSection = () => {
     return <LoadingState />;
   }
 
+  const initialCall = () => {
+    socket?.emit("callUser", {
+      from: authUser?.user.id,
+      to: id,
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-gray-200 bg-gray-50">
-        <TouchableOpacity onPress={() => router.back()}>
-          <ArrowLeftIcon className="text-gray-600" size={24} color="black" />
-        </TouchableOpacity>
-        <View className="ml-4">
-          <Text className="text-lg font-semibold">John Doe</Text>
-          {online && <Text className="text-sm text-orange-500">Online</Text>}
+      <View className="flex-row items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <View className="flex-row justify-center">
+          <TouchableOpacity onPress={() => router.back()}>
+            <ArrowLeftIcon className="text-gray-600" size={24} color="black" />
+          </TouchableOpacity>
+          <View className="ml-4">
+            <Text className="text-lg font-semibold">John Doe</Text>
+            {online && <Text className="text-sm text-orange-500">Online</Text>}
+          </View>
         </View>
+        <TouchableOpacity onPress={initialCall}>
+          <FontAwesome name="video-camera" size={24} color="black" />
+        </TouchableOpacity>
       </View>
 
       {/* Messages List */}

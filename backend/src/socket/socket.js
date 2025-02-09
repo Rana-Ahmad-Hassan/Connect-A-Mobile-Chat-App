@@ -39,6 +39,32 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("callUser", ({ from, to }) => {
+        console.log(from, to);
+        io.to(to).emit("incomingCall", { from });
+    });
+
+    socket.on("acceptCall", ({ from, to }) => {
+        io.to(from).emit("callAccepted", { to });
+    });
+
+    socket.on("sendOffer", ({ offer, to }) => {
+        io.to(to).emit("receiveOffer", { offer });
+    });
+
+    socket.on("sendAnswer", ({ answer, to }) => {
+        io.to(to).emit("receiveAnswer", { answer });
+    });
+
+    socket.on("newIceCandidate", ({ candidate, to }) => {
+        io.to(to).emit("newIceCandidate", { candidate });
+    });
+
+    socket.on("callRejected", ({ from }) => {
+        io.to(from).emit("callRejected");
+    });
+
+
     socket.on("disconnect", () => {
         console.log("user disconnected", socket.id);
         delete userSocketMap[userId];
