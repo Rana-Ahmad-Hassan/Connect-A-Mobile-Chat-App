@@ -23,6 +23,7 @@ const StatusScreen = () => {
     uri: string;
     type: string;
   } | null>(null);
+
   const { getStatus, loading } = useGetLoggedInUserStatuses();
   const { authUser } = useAuthContext();
   const router = useRouter();
@@ -35,7 +36,6 @@ const StatusScreen = () => {
       const currentUserStatuses = data.filter(
         (status: Status) => status.user === authUser?.user.id
       );
-
       setUserStatuses(currentUserStatuses);
     } catch (error) {
       console.error("Error fetching statuses:", error);
@@ -78,21 +78,20 @@ const StatusScreen = () => {
       alert("Permission to access gallery is required!");
       return;
     }
-  
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: false,
       quality: 1,
       selectionLimit: 1,
     });
-  
-  
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const media = result.assets[0];
       setSelectedMedia({ uri: media.uri, type: media.type || "image" });
     }
   };
-  
+
   const uploadMedia = () => {
     if (selectedMedia) {
       const file = {
@@ -114,11 +113,13 @@ const StatusScreen = () => {
     item,
   }: {
     item: {
-      _id: string; user: Status["user"]; statuses: Status[]
-};
+      _id: string;
+      user: Status["user"];
+      statuses: Status[];
+    };
   }) => (
     <Link
-    key={item._id}
+      key={item._id}
       href={{
         pathname: "/StatusViewer",
         params: {
@@ -128,10 +129,7 @@ const StatusScreen = () => {
       }}
       asChild
     >
-      <TouchableOpacity
-        className="flex-row items-center p-4"
-        key={item.user._id}
-      >
+      <TouchableOpacity className="flex-row items-center p-4">
         <View className="relative">
           <Image
             source={{ uri: item.statuses[0]?.mediaUrl }}
@@ -153,49 +151,65 @@ const StatusScreen = () => {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <Link
-        href={{
-          pathname: "/StatusViewer",
-          params: {
-            statuses: JSON.stringify(userStatuses),
-            initialIndex: "0",
-          },
-        }}
-        asChild
-      >
-        <TouchableOpacity className="flex-row items-center p-4 bg-white">
+      {userStatuses.length > 0 ? (
+        <Link
+          href={{
+            pathname: "/StatusViewer",
+            params: {
+              statuses: JSON.stringify(userStatuses),
+              initialIndex: "0",
+            },
+          }}
+          asChild
+        >
+          <TouchableOpacity className="flex-row items-center p-4 bg-white">
+            <View className="relative">
+              <View className="w-16 h-16 rounded-full border-4 border-green-500 flex items-center justify-center">
+                <Image
+                  source={{
+                    uri:
+                      userStatuses[0]?.mediaUrl ||
+                      "https://via.placeholder.com/100",
+                  }}
+                  className="w-14 h-14 rounded-full"
+                />
+              </View>
+            </View>
+            <View className="flex-1 ml-4">
+              <Text className="text-base font-medium">My Status</Text>
+              <Text className="text-sm text-gray-500">
+                Tap to view your status
+              </Text>
+            </View>
+            <TouchableOpacity className="p-2" onPress={pickMedia}>
+              <CameraIcon size={24} color="#007AFF" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Link>
+      ) : (
+        <View className="flex-row items-center p-4 bg-white">
           <View className="relative">
-            <View className="w-16 h-16 rounded-full border-4 border-green-500 flex items-center justify-center">
+            <View className="w-16 h-16 rounded-full border-4 border-gray-300 flex items-center justify-center">
               <Image
-                source={{
-                  uri:
-                    userStatuses[0]?.mediaUrl ||
-                    "https://via.placeholder.com/100",
-                }}
+                source={{ uri: "https://via.placeholder.com/100" }}
                 className="w-14 h-14 rounded-full"
               />
             </View>
-            {userStatuses.length === 0 && (
-              <PlusCircleIcon
-                className="absolute bottom-0 right-0 bg-white rounded-full"
-                size={20}
-                color="#007AFF"
-              />
-            )}
+            <PlusCircleIcon
+              className="absolute bottom-0 right-0 bg-white rounded-full"
+              size={20}
+              color="#007AFF"
+            />
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-medium">My Status</Text>
-            <Text className="text-sm text-gray-500">
-              {userStatuses.length > 0
-                ? "Tap to view your status"
-                : "Add to my status"}
-            </Text>
+            <Text className="text-sm text-gray-500">Add to my status</Text>
           </View>
           <TouchableOpacity className="p-2" onPress={pickMedia}>
             <CameraIcon size={24} color="#007AFF" />
           </TouchableOpacity>
-        </TouchableOpacity>
-      </Link>
+        </View>
+      )}
 
       {selectedMedia && (
         <View className="p-4 bg-white flex-row items-center justify-between">

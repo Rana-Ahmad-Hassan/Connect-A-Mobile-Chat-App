@@ -9,7 +9,7 @@ import { ChevronRight } from "lucide-react-native";
 import { useGetConversations } from "@/hooks/getConversations";
 import { useEffect, useState, useCallback } from "react";
 import { useAuthContext } from "@/context/authContext";
-import { useSocketContext } from "@/context/socketContext"; // Import socket context
+import { useSocketContext } from "@/context/socketContext";
 import { router } from "expo-router";
 import LoadingState from "@/components/loading";
 
@@ -17,9 +17,8 @@ const ChatList = () => {
   const { loading, error, getConversations } = useGetConversations();
   const [conversations, setConversations] = useState<any[]>([]);
   const { authUser } = useAuthContext();
-  const { onlineUsers } = useSocketContext(); // Get online users list from socket context
+  const { onlineUsers } = useSocketContext();
   const token = authUser?.token;
-  
 
   const fetchConversations = useCallback(async () => {
     if (!token) return;
@@ -38,9 +37,9 @@ const ChatList = () => {
   }, [fetchConversations]);
 
   if (loading) {
-    return <LoadingState/>
+    return <LoadingState />;
   }
-     
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1">
@@ -51,16 +50,21 @@ const ChatList = () => {
         ) : (
           conversations?.map((chat) => {
             const userId = chat?.participants?.[0]?._id;
-            const isOnline = onlineUsers.includes(userId); 
+            const isOnline = onlineUsers.includes(userId);
 
             return (
               <TouchableOpacity
                 key={chat._id}
                 className="flex-row items-start p-4 border-b border-gray-100"
                 onPress={() =>
-                  router.push(
-                    `/(chatSection)/${encodeURIComponent(userId)}/${encodeURIComponent(chat._id)}`
-                  )
+                  router.push({
+                    pathname: `/(chatSection)/${encodeURIComponent(
+                      userId
+                    )}/${encodeURIComponent(chat._id)}`,
+                    params: {
+                      username: chat?.participants?.[0]?.username || "Unknown",
+                    },
+                  })
                 }
               >
                 <View className="relative">

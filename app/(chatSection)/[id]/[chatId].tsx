@@ -22,7 +22,7 @@ const ChatSection = () => {
   const router = useRouter();
   const { sendMessage, loading } = useSendMessage();
   const { getMessages, loading: getMessagesLoadingState } = useGetMessages();
-  const { id, chatId } = useLocalSearchParams();
+  const { id, chatId, username } = useLocalSearchParams();
   const { authUser } = useAuthContext();
   const { socket, onlineUsers } = useSocketContext();
 
@@ -142,7 +142,7 @@ const ChatSection = () => {
           <ArrowLeftIcon className="text-gray-600" size={24} color="black" />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="text-lg font-semibold">John Doe</Text>
+          <Text className="text-lg font-semibold">{username}</Text>
           {online && <Text className="text-sm text-orange-500">Online</Text>}
         </View>
       </View>
